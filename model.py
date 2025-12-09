@@ -28,13 +28,18 @@ class GameModel:
         for r in range(ROWS):
             for c in range(COLS):
                 v = self.grid[r][c]
-                if v:
-                    key = v if isinstance(v, tuple) else (1, v)
-                    counts[key] = counts.get(key, 0) + 1
+                if isinstance(v, tuple):
+                    item_id, lvl = v
+                    max_lvl = self.item_max_levels.get(item_id, 6)
+                    # 只有当道具未达到最高等级时，才考虑是否可以合并
+                    if lvl < max_lvl:
+                        counts[v] = counts.get(v, 0) + 1
+        # 如果有任何一种可合并的道具数量大于等于2，则返回True
         return any(cnt >= 2 for cnt in counts.values())
 
     def update_hints(self):
         groups = {}
+        # 先统计所有可合并的道具（未达到最高等级且数量>=2）
         for r in range(ROWS):
             for c in range(COLS):
                 v = self.grid[r][c]
@@ -43,20 +48,25 @@ class GameModel:
                     max_lvl = self.item_max_levels.get(item_id, 6)
                     if lvl < max_lvl:
                         groups[v] = groups.get(v, 0) + 1
+        
+        # 只保留可以合并的道具组
         keys = [k for k, cnt in groups.items() if cnt >= 2]
         key_to_idx = {}
         for i, k in enumerate(keys):
             key_to_idx[k] = i
+        
         hints = {}
         if keys:
+            # 为每个可以合并的道具标记提示颜色
             for r in range(ROWS):
                 for c in range(COLS):
                     v = self.grid[r][c]
-                    if isinstance(v, tuple):
+                    if isinstance(v, tuple) and v in key_to_idx:
                         item_id, lvl = v
                         max_lvl = self.item_max_levels.get(item_id, 6)
-                        if lvl < max_lvl and v in key_to_idx:
+                        if lvl < max_lvl:
                             hints[(r, c)] = key_to_idx[v]
+        
         self.hints = hints
 
     def toggle_select(self, pos):
