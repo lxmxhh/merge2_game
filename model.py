@@ -2,12 +2,13 @@ import random
 from config import ROWS, COLS
 
 class GameModel:
-    def __init__(self, items_available=None):
+    def __init__(self, items_available=None, item_max_levels=None):
         self.grid = [[0 for _ in range(COLS)] for _ in range(ROWS)]
         self.score = 0
         self.game_over = False
         self.selected = []
         self.items_available = items_available or [1, 2, 3]
+        self.item_max_levels = item_max_levels or {}
         self._init_grid()
 
     def _init_grid(self):
@@ -62,10 +63,16 @@ class GameModel:
             item1, lvl1 = v1
             item2, lvl2 = v2
             if item1 == item2 and lvl1 == lvl2:
-                new_v = (item2, lvl2 + 1)
+                next_lvl = lvl2 + 1
+                max_lvl = self.item_max_levels.get(item2, 6)
+                if next_lvl > max_lvl:
+                    # 超过该道具最高等级，禁止合成
+                    self.selected = [b]
+                    return False
+                new_v = (item2, next_lvl)
                 self.grid[r2][c2] = new_v
                 self.grid[r1][c1] = 0
-                self.score += (lvl2 + 1) * 10
+                self.score += next_lvl * 10
                 self.spawn_smart_items(1)
                 self.selected = []
                 self.game_over = not self.can_merge()
@@ -102,6 +109,8 @@ class GameModel:
                 if roll < 0.6: lvl = 1
                 elif roll < 0.9: lvl = 2
                 else: lvl = 3
+                max_lvl = self.item_max_levels.get(item, 6)
+                lvl = min(lvl, max_lvl)
                 spawn_val = (item, lvl)
             
             self.grid[spawn_pos[0]][spawn_pos[1]] = spawn_val

@@ -47,6 +47,13 @@ class GameView:
     def get_available_items(self):
         return sorted(self.item_images.keys())
 
+    def get_item_max_levels(self):
+        max_levels = {}
+        for item_id, levels in self.item_images.items():
+            if levels:
+                max_levels[item_id] = max(levels.keys())
+        return max_levels
+
     def draw_rect(self, x, y, w, h, color, radius=8):
         pygame.draw.rect(self.screen, color, pygame.Rect(x, y, w, h), border_radius=radius)
 
@@ -79,8 +86,14 @@ class GameView:
                 y = grid_y + MARGIN + r * (TILE_SIZE + MARGIN)
                 
                 v = model.grid[r][c]
-                lvl = v[1] if isinstance(v, tuple) else 0
-                color = TILE_COLORS.get(lvl, EMPTY_COLOR) if v else EMPTY_COLOR
+                if v and isinstance(v, tuple):
+                    item_id, level = v
+                    max_lvl = model.item_max_levels.get(item_id, 6)
+                    base_color = TILE_COLORS.get(level, EMPTY_COLOR)
+                    color = base_color if level < max_lvl else MAXED_TILE_BG
+                else:
+                    lvl = v[1] if isinstance(v, tuple) else 0
+                    color = TILE_COLORS.get(lvl, EMPTY_COLOR) if v else EMPTY_COLOR
                 
                 rect = pygame.Rect(x, y, TILE_SIZE, TILE_SIZE)
                 self.draw_rect(x, y, TILE_SIZE, TILE_SIZE, color, radius=8)

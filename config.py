@@ -23,6 +23,7 @@ TEXT_COLOR_LIGHT = (249, 246, 242)
 SCORE_BG = (143, 122, 102)
 SELECTED_BORDER_COLOR = (255, 215, 0)
 OVERLAY_COLOR = (255, 255, 255, 200)
+MAXED_TILE_BG = (160, 160, 160)
 
 # 等级名称
 LEVEL_NAMES = {
@@ -45,4 +46,9 @@ TILE_COLORS = {
     4: (245, 149, 99),
     5: (246, 124, 95),
     6: (246, 94, 59),
+}
+
+# 可选：为每种道具配置最高等级；留空则从 assets 中自动检测
+ITEM_MAX_LEVELS = {
+    # 例如：1: 6, 2: 5, 3: 4
 }

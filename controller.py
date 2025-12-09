@@ -2,14 +2,19 @@ import sys
 import pygame
 from model import GameModel
 from view import GameView
-from config import FPS
+from config import FPS, ITEM_MAX_LEVELS
 
 class GameController:
     def __init__(self):
         self.view = GameView()
         # Initialize model with items found by view
         items = self.view.get_available_items()
-        self.model = GameModel(items_available=items)
+        detected_max = self.view.get_item_max_levels()
+        # 合并配置：优先生效 config 中的指定项
+        max_levels = dict(detected_max)
+        for k, v in ITEM_MAX_LEVELS.items():
+            max_levels[k] = v
+        self.model = GameModel(items_available=items, item_max_levels=max_levels)
         self.clock = pygame.time.Clock()
         self.running = True
 
