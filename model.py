@@ -39,7 +39,10 @@ class GameModel:
             for c in range(COLS):
                 v = self.grid[r][c]
                 if isinstance(v, tuple):
-                    groups[v] = groups.get(v, 0) + 1
+                    item_id, lvl = v
+                    max_lvl = self.item_max_levels.get(item_id, 6)
+                    if lvl < max_lvl:
+                        groups[v] = groups.get(v, 0) + 1
         keys = [k for k, cnt in groups.items() if cnt >= 2]
         key_to_idx = {}
         for i, k in enumerate(keys):
@@ -49,8 +52,11 @@ class GameModel:
             for r in range(ROWS):
                 for c in range(COLS):
                     v = self.grid[r][c]
-                    if isinstance(v, tuple) and v in key_to_idx:
-                        hints[(r, c)] = key_to_idx[v]
+                    if isinstance(v, tuple):
+                        item_id, lvl = v
+                        max_lvl = self.item_max_levels.get(item_id, 6)
+                        if lvl < max_lvl and v in key_to_idx:
+                            hints[(r, c)] = key_to_idx[v]
         self.hints = hints
 
     def toggle_select(self, pos):
@@ -120,20 +126,30 @@ class GameModel:
                     nr, nc = r + dr, c + dc
                     if 0 <= nr < ROWS and 0 <= nc < COLS:
                         nv = self.grid[nr][nc]
-                        if isinstance(nv, tuple):
+                        if isinstance(nv, tuple) and nv[1] in (1, 2, 3):
                             neighbors.append(nv)
-                
+                if not neighbors:
+                    pool = []
+                    for rr in range(ROWS):
+                        for cc in range(COLS):
+                            vv = self.grid[rr][cc]
+                            if isinstance(vv, tuple) and vv[1] in (1, 2, 3):
+                                pool.append(vv)
+                    neighbors = pool
                 if neighbors:
                     spawn_val = random.choice(neighbors)
             
             if spawn_val is None:
                 item = random.choice(self.items_available)
                 roll = random.random()
-                if roll < 0.6: lvl = 1
-                elif roll < 0.9: lvl = 2
-                else: lvl = 3
+                if roll < 0.6:
+                    lvl = 1
+                elif roll < 0.9:
+                    lvl = 2
+                else:
+                    lvl = 3
                 max_lvl = self.item_max_levels.get(item, 6)
-                lvl = min(lvl, max_lvl)
+                lvl = min(lvl, max_lvl, 3)
                 spawn_val = (item, lvl)
             
             self.grid[spawn_pos[0]][spawn_pos[1]] = spawn_val
