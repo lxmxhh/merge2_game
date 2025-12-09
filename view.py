@@ -15,6 +15,7 @@ class GameView:
         
         self.images = self.load_images(TILE_SIZE)
         self.item_images = self.load_item_images(TILE_SIZE)
+        self.select_img = self.load_select_image(TILE_SIZE)
 
     def load_images(self, size):
         images = {}
@@ -43,6 +44,17 @@ class GameView:
                     except Exception:
                         pass
         return items
+
+    def load_select_image(self, size):
+        path = os.path.join("assets", "select.png")
+        if os.path.isfile(path):
+            try:
+                img = pygame.image.load(path).convert_alpha()
+                img = pygame.transform.smoothscale(img, (size, size))
+                return img
+            except Exception:
+                return None
+        return None
 
     def get_available_items(self):
         return sorted(self.item_images.keys())
@@ -114,9 +126,20 @@ class GameView:
                             name = LEVEL_NAMES.get(level, f"Lv{level}")
                             color_text = TEXT_COLOR_DARK if level <= 2 else TEXT_COLOR_LIGHT
                             self.draw_text_center(name, self.font_med, color_text, rect)
+
+                if v and isinstance(v, tuple):
+                    if (r, c) in getattr(model, 'hints', {}):
+                        idx = model.hints[(r, c)] % len(HINT_COLORS)
+                        overlay = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+                        oc = HINT_COLORS[idx]
+                        overlay.fill((oc[0], oc[1], oc[2], HINT_ALPHA))
+                        self.screen.blit(overlay, (x, y))
                 
                 if (r, c) in model.selected:
-                    pygame.draw.rect(self.screen, SELECTED_BORDER_COLOR, rect, width=4, border_radius=8)
+                    if self.select_img is not None:
+                        self.screen.blit(self.select_img, (x, y))
+                    else:
+                        pygame.draw.rect(self.screen, SELECTED_BORDER_COLOR, rect, width=4, border_radius=8)
 
         # Game Over Overlay
         if model.game_over:

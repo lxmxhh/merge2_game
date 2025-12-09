@@ -9,6 +9,7 @@ class GameModel:
         self.selected = []
         self.items_available = items_available or [1, 2, 3]
         self.item_max_levels = item_max_levels or {}
+        self.hints = {}
         self._init_grid()
 
     def _init_grid(self):
@@ -17,6 +18,7 @@ class GameModel:
         for r, c in random.sample(all_cells, count):
             item = random.choice(self.items_available)
             self.grid[r][c] = (item, 1)
+        self.update_hints()
 
     def empty_cells(self):
         return [(r, c) for r in range(ROWS) for c in range(COLS) if self.grid[r][c] == 0]
@@ -30,6 +32,26 @@ class GameModel:
                     key = v if isinstance(v, tuple) else (1, v)
                     counts[key] = counts.get(key, 0) + 1
         return any(cnt >= 2 for cnt in counts.values())
+
+    def update_hints(self):
+        groups = {}
+        for r in range(ROWS):
+            for c in range(COLS):
+                v = self.grid[r][c]
+                if isinstance(v, tuple):
+                    groups[v] = groups.get(v, 0) + 1
+        keys = [k for k, cnt in groups.items() if cnt >= 2]
+        key_to_idx = {}
+        for i, k in enumerate(keys):
+            key_to_idx[k] = i
+        hints = {}
+        if keys:
+            for r in range(ROWS):
+                for c in range(COLS):
+                    v = self.grid[r][c]
+                    if isinstance(v, tuple) and v in key_to_idx:
+                        hints[(r, c)] = key_to_idx[v]
+        self.hints = hints
 
     def toggle_select(self, pos):
         r, c = pos
@@ -76,6 +98,7 @@ class GameModel:
                 self.spawn_smart_items(1)
                 self.selected = []
                 self.game_over = not self.can_merge()
+                self.update_hints()
                 return True
         return False
 
@@ -114,6 +137,7 @@ class GameModel:
                 spawn_val = (item, lvl)
             
             self.grid[spawn_pos[0]][spawn_pos[1]] = spawn_val
+        self.update_hints()
 
     def reset(self):
         self.grid = [[0 for _ in range(COLS)] for _ in range(ROWS)]
@@ -121,3 +145,4 @@ class GameModel:
         self.game_over = False
         self.selected = []
         self._init_grid()
+        self.update_hints()
