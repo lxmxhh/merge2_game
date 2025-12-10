@@ -101,11 +101,11 @@ class GameView:
                 if v and isinstance(v, tuple):
                     item_id, level = v
                     max_lvl = model.item_max_levels.get(item_id, 6)
-                    base_color = TILE_COLORS.get(level, EMPTY_COLOR)
+                    base_color = TILE_COLORS.get(1)
                     color = base_color if level < max_lvl else MAXED_TILE_BG
                 else:
                     lvl = v[1] if isinstance(v, tuple) else 0
-                    color = TILE_COLORS.get(lvl, EMPTY_COLOR) if v else EMPTY_COLOR
+                    color = TILE_COLORS.get(1) if v else EMPTY_COLOR
                 
                 rect = pygame.Rect(x, y, TILE_SIZE, TILE_SIZE)
                 self.draw_rect(x, y, TILE_SIZE, TILE_SIZE, color, radius=8)
